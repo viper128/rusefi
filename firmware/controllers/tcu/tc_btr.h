@@ -2,29 +2,33 @@
 
 #include "tcu_controller.h"
 
-// Define our specific static solenoid index allocations for readability
+// Static solenoid map array indexing offsets for clarity
 #define BTR_SOL_1 0
 #define BTR_SOL_2 1
-#define BTR_SOL_6 2
-#define BTR_SOL_7 3
+#define BTR_SOL_3 2  // Clutch Regulator 
+#define BTR_SOL_4 3  // Band Regulator
+#define BTR_SOL_6 4  // Line Boost
+#define BTR_SOL_7 5  // TCC Lockup
 
-class BtrController : public BaseTcuController {
+class BtrTransmissionController : public BaseTcuController {
 public:
-    BtrController();
+    BtrTransmissionController();
     
     // Core rusEFI lifecycle overrides
     void init() override;
     void update(efitick_t nowNt) override;
     
 protected:
-    // Overrides determining output pins based on current calculated target gear
+    // Lifecycle hooks for handling gear changes and line pressure variations
     void assignSolenoidOutputs(int gear) override;
     void updateLinePressure(float throttlePosition, float outputSpeed) override;
 
 private:
-    // Keep track of our PWM variable line pressure output pin
+    // PWM output driver pin structure for S5 VPS
     OutputPin vpsS5Output;
     
-    // Shift logic map configuration tracking parameters
-    bool isM97Configuration = true; // Default to M97 setup (Normally Open layout)
+    // Configuration tracking parameters
+    bool isM97Configuration = true; // True = M93/M97 (Normally Open layout), False = M85/M91
+    bool isShiftingPhase = false; 
+    int previousGear = 1;
 };
